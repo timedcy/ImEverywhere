@@ -1,0 +1,4 @@
+weather Then time place
+travel Then time place
+service Then card property
+concept Then card property

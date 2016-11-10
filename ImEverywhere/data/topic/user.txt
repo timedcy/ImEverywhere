@@ -1,0 +1,7 @@
+root Contain weather time place travel bank
+user1 Contain weather time place travel bank
+user2 Contain weather time place travel bank
+xiaomin Contain service concept card property
+xiaomin1 Contain service concept card property
+xiaomin2 Contain service concept card property
+xiaomin3 Contain service concept card property

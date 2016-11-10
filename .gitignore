@@ -1,0 +1,4 @@
+*.pyc
+__pycache__
+ImEverywhere/data/ltp/*
+gqy_db
