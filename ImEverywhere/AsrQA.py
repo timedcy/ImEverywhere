@@ -5,10 +5,11 @@ import asr as sr
 from tts import ttsBaidu
 from QA import SearchDatabase, UnderstandContext
 
+r = sr.Recognizer()
+m = sr.Microphone(1, 16000, 2048)
+
 if __name__ == '__main__':
-    r = sr.Recognizer()
-    m = sr.Microphone(1, 8000, 2048)
-	
+    answer = ""	
     print("A moment of silence, please...")
     with m as source:
         r.adjust_for_ambient_noise(source)
@@ -24,9 +25,9 @@ if __name__ == '__main__':
                     answer == "对不起我没听清您说的话，请问可以再重复一遍吗？"
                 else:
 				    # 基于语义模式匹配
-                    # answer = SearchDatabase(question=sentence, username=current_user)
+                    answer = SearchDatabase(question=sentence, username="Human")
 					# 基于上下文理解
-                    answer = UnderstandContext(question=sentence, username="user1")
+                    # answer = UnderstandContext(question=sentence, username="user1")
 				# step3.TTS with Baidu REST API
                 print("A: " + answer)
                 ttsBaidu(answer, language="zh")            

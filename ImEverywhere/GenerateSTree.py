@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 import os
-
 import jieba
 # jieba 加载自定义词典
 jieba.load_userdict("data/jieba/userdict.txt")
@@ -15,7 +14,7 @@ from SemanticTree import SemanticTree
 # from pyltp import SentenceSplitter
 
 
-def GenerateSTree(NodeClass = "NodeClass", Q = "Q", A = "A", words = None, content = None, tags = None, username = "Human"):
+def GenerateSTree(NodeClass = "QA", Q = "Q", A = "A", words = None, tags = None, content = None, username = "Human"):
     """
     在图形数据库neo4j里建立QA语义关系图
     Q为question原句，A为answer原句，content为语义依存树，tags为Q关键词。
@@ -26,9 +25,9 @@ def GenerateSTree(NodeClass = "NodeClass", Q = "Q", A = "A", words = None, conte
     graph = Graph("http://localhost:7474/db/data/", password = "gqy")
     sTreeNode = []
     isCreated = []
-    sTreeRoot = Node(NodeClass, name = username, words = words, keywords = tags, Q = Q, A = A)
+    sTreeRoot = Node(NodeClass, name = username, words = words, tags = tags, Q = Q, A = A)
     for word in content:
-        node = Node("Semantic", name = (str(word["id"]) + "_" + word["cont"]), word = word["cont"], word_id = word["id"], pos = word["pos"], semparent = word["semparent"], semrelate = word["semrelate"])
+        node = Node("STree", name = (str(word["id"]) + "_" + word["cont"]), word = word["cont"], word_id = word["id"], pos = word["pos"], semparent = word["semparent"], semrelate = word["semrelate"])
         sTreeNode.append(node)
         isCreated.append(False)
     for index in range(len(sTreeNode)):
@@ -47,8 +46,8 @@ def GenerateSTree(NodeClass = "NodeClass", Q = "Q", A = "A", words = None, conte
         graph.create(node_semparent)
 
 if __name__ == '__main__':
-    pynlpir.open()
-    f = open("data/topic/bank/semantic/xiaomin.txt", encoding = "UTF-8")
+    # pynlpir.open()
+    f = open("data/topic/bank/semantic/xiaomin.txt", encoding="UTF-8")
     # 默认问题为单句	
     line = f.readline()
     while line:
@@ -59,18 +58,18 @@ if __name__ == '__main__':
         words = []
         tags = []
         # 1.分词，关键词提取。可用jieba或者nlpir。
-        # words = list(jieba.cut(Q))
-        # tags = jieba.analyse.extract_tags(Q, topK=5)
-        segments = pynlpir.segment(Q)
-        for segment in segments:
-            words.append(segment[0])	
-        tags = pynlpir.get_key_words(Q, weighted = False)
+        words = list(jieba.cut(Q))
+        tags = jieba.analyse.extract_tags(Q, topK=10)
+        # segments = pynlpir.segment(Q)
+        # for segment in segments:
+            # words.append(segment[0])	
+        # tags = pynlpir.get_key_words(Q, weighted = False)
 
         # 2.语义依存树
         content = SemanticTree(Q)
         # 3.将每个句子的语义分析结果加入neo4j数据库
         for result in content:
-            GenerateSTree(NodeClass = "Service", Q = Q, A = A, words = words, content = result, tags = tags, username = "Human")
+            GenerateSTree(NodeClass="QA", Q=Q, A=A, words=words, tags=tags, content=result, username="Human")
         line = f.readline()
     f.close()
-    pynlpir.close()
+    # pynlpir.close()

@@ -17,7 +17,7 @@ def SynonymTag(words):
     graph = Graph("http://localhost:7474/db/data/", password = "102422")
     semantic_vector = []
     for word in words:
-        word_node = list(graph.find("synonym", "word", word, 1))
+        word_node = list(graph.find_one("synonym", "word", word))
         if word_node:
             word_tag = word_node[0]["tag"]
             semantic_vector.append(word_tag)
