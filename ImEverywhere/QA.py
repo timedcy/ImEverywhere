@@ -8,33 +8,24 @@ The 'py2neo' is a python package of neo4j, the most useful graph database.
 """
 import sys
 import os
-import time
 import pynlpir
-import jieba
-# jieba 自定义词典
-jieba.load_userdict("data/jieba/userdict.txt")
-import jieba.analyse
 from py2neo import Graph, Node, Relationship
-from SemanticTree import SemanticTree
-from GenerateSTree import GenerateSTree
+graph = Graph("http://localhost:7474/db/data/", password="gqy")
 import API
-from SynonymousSentence import SynonymousSentence
-from SemanticSimilarity import SemanticSimilarity
+from semantic import semantic_similarity, synonym_cut, generate_tree
+from mytools import time_me, get_current_time
 
-
-def GetNowTime():
-    return time.strftime("%Y-%m-%d-%H-%M-%S",time.localtime())
-	
-def AddToMemory(Q="Q", words=None, tags=None, content=None, username="Human"):
+# TODO	
+def add_to_memory(Q="Q", words=None, tags=None, content=None, username="Human"):
     """
     将用户当前语句的语义分析结果加入信息记忆	
     """
 	# 添加到记忆链，每一类型的节点都需要重构
-    qaID = username + "_" + GetNowTime()
+    qaID = username + "_" + get_current_time()
     for semantic_tree in content:
-        GenerateSTree(NodeClass="Memory", Q=Q, words=words, content=semantic_tree, tags=tags, username=username)	
+        generate_tree(NodeClass="Memory", Q=Q, words=words, content=semantic_tree, tags=tags, username=username)	
 	
-def ContextClassify(tags, username):
+def context_classify(tags, username):
     """
     根据上下文判断关键词的话题    
     """
@@ -93,29 +84,19 @@ def ContextClassify(tags, username):
     result = dict(topic=current_topic, parameters=parameters)
     return result
 	
-def UnderstandContext(question="question", username="root", tool="jieba"):
+def understand_context(question="question", username="root", tool="jieba"):
     """
     上下文语境理解
     """
-    words = []
     answer = None
     classify = None
-    if tool == "pynlpir":
-        pynlpir.open()
-        segments = pynlpir.segment(question)
-        for segment in segments:
-            words.append(segment[0])
-        tags = pynlpir.get_key_words(question, weighted=False)
-        pynlpir.close()
-    elif tool == "jieba":
-        words = list(jieba.cut(question))
-        tags = jieba.analyse.extract_tags(question, topK=10)
-        print(tags)
+    words = synonym_cut(question, 'w')
+    tags = synonym_cut(question, 't')
     # content = SemanticTree(question)
-    # 将用户当前语句的语义分析结果加入信息记忆 TO UPDATE 'Classify' in GenerateSTree
-    # AddToMemory(Q=question, words=words, tags=tags, content=content, username=username)
+    # 将用户当前语句的语义分析结果加入信息记忆 TO UPDATE 'Classify' in generate_tree
+    # add_to_memory(Q=question, words=words, tags=tags, content=content, username=username)
     # 结合上下文进行话题标注，语义判断，以及参数抽取
-    classify = ContextClassify(tags, username=username)
+    classify = context_classify(tags, username=username)
     # 查询匹配答案
     if classify["parameters"]:
         answer = API.topic_query(topic=classify["topic"], parameters=classify["parameters"])
@@ -123,30 +104,32 @@ def UnderstandContext(question="question", username="root", tool="jieba"):
         answer = "关于这个问题我正在学习中，哈哈"
     return answer
 
-# TODO	
-def PatternMatch(words, subgraph):
-    """
-    从图形数据库返回的搜索结果列表选取相似度最高的模式匹配
-    """
-	# 计算模式匹配的相似度
 	
-    similarity = 1
-    return similarity
-	
-# TODO	
-def ExtractSynonym(words, subgraph):
+def extract_synonym(question, subgraph, pattern = "wf"):
     """
-    从图形数据库返回的搜索结果列表选取相似度最高的同义句
+    从图形数据库返回的搜索结果列表选取相似度最高的语义Jaccard匹配同义句
+    pattern可选'w'-分词, 't'-关键词, 'wf'-分词标签, 'tf-关键词标签'
     """
     similarity = []
+    sv1 = synonym_cut(question, pattern)
     for node in subgraph:
-        ss = SemanticSimilarity(words, node["words"])
+        sv2 = synonym_cut(node["Q"], pattern)
+        ss = semantic_similarity(sv1, sv2, pattern="sj")
         similarity.append(ss)
-    index = similarity.index(max(similarity))
-    return subgraph[index]["A"]
+    max_similarity = max(similarity)
+    print("Similarity Score: " + str(max_similarity))
+    index = similarity.index(max_similarity)
+    print("Q: " + subgraph[index]["Q"])
+    print("A: " + subgraph[index]["A"])
+    if max_similarity > 0.8:
+        answer = subgraph[index]["A"]
+    else:
+	    # 添加随机回答
+        answer = "正在学习中"
+    return answer
 
 # TODO
-def ExtractSTree(node, subgraph):
+def extract_tree(node, subgraph):
     """
     从图形数据库返回的搜索结果列表选取相似度最高的语义树	
     """
@@ -159,50 +142,25 @@ def ExtractSTree(node, subgraph):
     return subgraph[index]["A"]
 	
 # TODO
-def CreateSentence():
+def create_sentence():
     """
     答案语句的自动生成	
     """
     return "This is created by AI."
 
-def SearchDatabase(question="question", username="Human"):
+@time_me()
+def search_database(question="question", username="Human"):
     """
     username属性为某个已注册用户的名字，默认为"Human"。
     搜索与问题相关的子图，选取语义相似度最高的QA备选项
     """
-    graph = Graph("http://localhost:7474/db/data/", password="gqy")
-    words = list(jieba.cut(question))
-    tags = jieba.analyse.extract_tags(question, topK=10)
-    # pynlpir.open()
-    # segments = pynlpir.segment(question)
-    # for segment in segments:
-        # words.append(segment[0])	
-    # tags = pynlpir.get_key_words(question, weighted=False)
-    # pynlpir.close()
-    content = SemanticTree(question)
-	# 将用户当前语句的语义分析结果加入记忆   
-    AddToMemory(Q=question, words=words, tags=tags, content=content, username=username)
-    # 问题匹配，初步筛选列表
-	
-    # subgraph = graph.find_one("QA", "tags", tags)
-    # 直接选取
-    # if subgraph:
-        # answer = subgraph["A"]
-    subgraph = graph.find("QA", "name", username)
-    memory_node = graph.find_one("Memory", "Q", question)
+    subgraph = list(graph.find("QA", "username", username))
     if subgraph:
 	    # 多模式匹配问句选取相似度最高的问句
-        similarity = []
-        for node in subgraph:
-            ss = PatternMatch(memory_node, node)
-            similarity.append(ss)
-        index = similarity.index(max(similarity))
-        answer = subgraph[index]["A"]
-        # 同义句语义相似度匹配，抽取相似度最高同义句 TODO
-        # answer = ExtractSynonym(words, subgraph)
+        # answer = extract_synonym(words, subgraph, key="words")
+        answer = extract_synonym(question, subgraph, pattern = "wf")
         # 语义依存树相似度匹配，抽取相似度最高语义树 TODO
-        # answer = ExtractSTree(memory_node, subgraph)
+        # answer = extract_tree(sv, subgraph)
     else:
-        # 添加随机回答 TODO
-        answer = "关于这个问题我正在学习中，哈哈"		
+        answer = "欢迎您注册哦"		
     return answer.rstrip()

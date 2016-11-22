@@ -1,3 +1,0 @@
-标签：测试文档
-#同义句生成测试：
->Enter the SynonymousSentence mode...

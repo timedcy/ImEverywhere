@@ -1,19 +1,54 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-# @Date    : 2016.11.7
-# @Function: Agile Software Development——Excel 
-# @Author  : Rain
-
+# -*- coding:utf8 -*-
+# PEP 8 check with Pylint
+"""
+My tools
+"""
+import sys
 import os
+import time
+import functools
 import string
 import xlrd
 import xlwt
-import jieba
-jieba.load_userdict("data/jieba/userdict.txt")
-import jieba.analyse
-from SemanticTree import SemanticTree
-from GenerateSTree import GenerateSTree
 
+
+def time_me(info="used", format="s"):
+    def _time_me(fn):
+        @functools.wraps(fn)
+        def _wrapper(*args, **kwargs):
+            start = time.clock()
+            result = fn(*args, **kwargs)
+            if format == "s":
+                print("%s %s %s"%(fn.__name__, info, time.clock() - start), "s")
+            elif format == "ms":
+                print("%s %s %s" % (fn.__name__, info, 1000*(time.clock() - start)), "ms")
+            return result
+        return _wrapper
+    return _time_me
+	
+  
+def get_current_time(format="%Y-%m-%d-%H-%M-%S"):
+    """
+    Get current time with specific format string.
+    """
+    assert isinstance(format, str), "The format must be a string."
+    return time.strftime(format, time.localtime())
+	
+	
+def file_replace(origin_filepath, new_filepath):
+    with open(origin_filepath, 'w') as origin:
+        with open(new_filepath, 'r') as new:
+            for line in new.readlines():
+                origin.write(line)
+
+				
+def change_known_hosts(database_name):
+    assert isinstance(database_name, str), "The database name must be a string."
+    origin_known_hosts = "C:/Users/10449/.neo4j/known_hosts"
+    new_known_hosts = "C:/Users/10449/.neo4j/known_hosts_" + database_name
+    file_replace(origin_known_hosts, new_known_hosts)
+	
 def get_data_excel(filepath):
     """Get excel source"""
     is_valid = False   
@@ -31,9 +66,8 @@ def get_data_excel(filepath):
         return None
     return data
 
-
 def handle_data_excel(filepath):
-    """Processing data to dialog"""
+    """Processing data of excel"""
     data = get_data_excel(filepath)
     data_sheets = data.sheet_names()
     for sheet_name in data_sheets:
@@ -54,25 +88,23 @@ def handle_data_excel(filepath):
                 for i in range(nrows):
                     Q = table.cell(i,col_index[0]).value
                     A = table.cell(i,col_index[1]).value
-                    print("Q: " + Q + "\nA: " + A)
-		
-					# 1.分词，关键词提取
-                    words = []
-                    tags = []
-                    words = list(jieba.cut(Q))
-                    tags = jieba.analyse.extract_tags(Q, topK=10)
-					# 2.语义依存树
-                    semantic_trees = SemanticTree(Q)
-					# 3.将每个句子的语义分析结果加入neo4j数据库
-                    for semantic_tree in semantic_trees:
-                        GenerateSTree(NodeClass="QA", Q=Q, A=A, words=words, tags=tags, content=semantic_tree, username="Human")
+                    print("Q: " + Q + "\nA: " + A)		
+					# Your processing function here
+					# myfunc(Q, A)
+					
             except Exception as e:
                 print('Error: %s' %e)
                 return None
         else:
             print('Error! Data of %s is empty!' %sheet_name)
             return None
+	
+@time_me(format="ms")	
+def test():
+    change_known_hosts("gqy")
+    print(get_current_time())
+	
 
-
-if __name__ == '__main__':
-    handle_data_excel("./data/topic/bank/QA.xls")
+if __name__ == "__main__":
+    test()		
+	

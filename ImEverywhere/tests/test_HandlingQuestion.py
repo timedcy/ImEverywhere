@@ -2,12 +2,12 @@
 
 import sys
 sys.path.append("../")
-from sTreeAPI import sTreeAPI
-from HandlingQuestion import analyseJieba, analyseLtp, analyseNlpir
+from SemanticTree import SemanticTree
+from HandlingQuestion import analyseJieba, analyseNlpir, analyseLtp
 
-def testsTreeAPI(question):
+def testSemanticTree(question):
     print(sys._getframe().f_code.co_name)
-    content = sTreeAPI(question)
+    content = SemanticTree(question)
     print(content)
     print(str(len(content)) + " sentences" if isinstance(content[0], list) else "1 sentence only")
 
@@ -28,7 +28,7 @@ def testNlpir(question):
 
 if __name__ == "__main__":
     question = "我想买一张明天上海到北京的机票。"
-    testsTreeAPI(question)
+    testSemanticTree(question)
     testJieba(question)
     testNlpir(question)
     testLtp(question)
