@@ -89,7 +89,7 @@ def handle_data_excel(filepath):
                     Q = table.cell(i,col_index[0]).value
                     A = table.cell(i,col_index[1]).value
                     print("Q: " + Q + "\nA: " + A)					
-					# Your processing function here
+					# Your processing function of excel data here
                     add_qa(Q, A, delimiter="|")
 					
             except Exception as e:
