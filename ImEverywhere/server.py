@@ -8,7 +8,7 @@ The socketserver module simplifies the task of writing network servers.
 import json
 import chardet
 import socketserver
-from QA import UnderstandContext
+from qa import search_database
 
 
 class MyTCPHandler(socketserver.BaseRequestHandler):
@@ -21,7 +21,7 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
     """
 
     def handle(self):
-        self.user = "root"
+        self.user = "Human"
         while True:
 			# self.request is the TCP socket connected to the client
             self.data = self.request.recv(1024)
@@ -43,17 +43,17 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                 if json_data["action"] == 1:
                     janswer = json.dumps({"cmd":8}) + "\r\n"
                     self.request.sendall(janswer.encode(encoding))
-                if json_data["action"] == 2:
+                elif json_data["action"] == 2:
                     question = json_data["ask_content"]
                     print("Q: " + question)
-				    # step 2.QA with NLP
-                    answer = UnderstandContext(question=question, username=self.user)
+				    # step 2.QA with NLU
+                    answer = search_database(question=question, username=self.user)
                     print("A: " + answer)
 				    # step 3.str to json and send back the janswer
                     janswer = json.dumps({"cmd":3, "content":answer, "emotion":2}) + "\r\n"
                     self.request.sendall(janswer.encode(encoding))
 
-def start_server(host, port):
+def start_server(host = "localhost", port = 9999):
     """
     Start server with host and port.
 
@@ -66,6 +66,5 @@ def start_server(host, port):
     sock.serve_forever()
 
 if __name__ == "__main__":
-    HOST, PORT = "192.168.4.72", 9999
-    start_server(HOST, PORT)
+    start_server(host="192.168.4.129")
 	

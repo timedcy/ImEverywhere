@@ -6,11 +6,11 @@ import numpy
 import json
 import jieba
 jieba.set_dictionary("data/jieba/synonymdict.txt")
-#jieba.load_userdict("data/jieba/userdict.txt")
+jieba.load_userdict("data/jieba/userdict.txt")
 import jieba.posseg
 import jieba.analyse
 from urllib import request
-from mytools import time_me, get_current_time
+from mytools import time_me, get_current_time, random_item
 from py2neo import Graph, Node, Relationship
 graph = Graph("http://localhost:7474/db/data/", password = "gqy")
 
@@ -72,7 +72,7 @@ def generate_tree(NodeClass = "STree", Q = "Q", A = "A", content = None, usernam
         isCreated[index] = True
         graph.create(node_semparent)
 		
-@time_me()
+#@time_me()
 def jaccard(sv1, sv2):
     """
     基础Jaccard匹配相似度
@@ -103,7 +103,7 @@ def synonym_cut(sentence, pattern = "wf"):
                 sv.append(w.flag)			
     return sv
 	
-@time_me()	
+#@time_me()	
 def synonym_tag(words):
     """
     标注词向量的同义词分类标签
@@ -221,7 +221,7 @@ def synonym_sentence(words):
         if word_node:
             tag_node = graph.find_one("SynonymTag", "name", word_node["tag"])
             tag_words = tag_node["words"]
-            synonym_random = tag_words[random.randint(0, len(tag_words)-1)]
+            synonym_random = random_item(tag_words)
             sv.append(synonym_random)   
     return sv	
 
@@ -235,8 +235,8 @@ if __name__ == "__main__":
         try:
             sentence1 = input("\nsentence1\n>>")
             sentence2 = input("sentence2\n>>")
-            w1 = synonym_cut(sentence1, 't')
-            w2 = synonym_cut(sentence2, 't')
+            w1 = synonym_cut(sentence1, 'w')
+            w2 = synonym_cut(sentence2, 'w')
             sv1 = synonym_cut(sentence1, 'wf')
             sv2 = synonym_cut(sentence2, 'wf')
             print(w1, w2)

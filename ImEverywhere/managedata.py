@@ -10,8 +10,9 @@ Neo4j图形数据库管理
 import sys
 import json
 import codecs
-from mytools import time_me
+from mytools import time_me, get_data_excel
 from py2neo import Graph, Node, Relationship
+from semantic import synonym_cut, generate_qa
 
 # Read config
 config = {}
@@ -64,7 +65,51 @@ def add_to_synonym(sample=None, words=None):
         generate_synonym(sample_node["tag"], words)
     else:
         print("Sorry, can't find SynonymTag, please create SynonymTag first!")
+
+def handle_data_excel(filepath):
+    """Processing data of excel"""
+    data = get_data_excel(filepath)
+    data_sheets = data.sheet_names()
+    for sheet_name in data_sheets:
+        table = data.sheet_by_name(sheet_name)
+        # Select specified table
+        # table = data.sheet_by_index(0)
+        if data: 
+            # Select specified column
+            col_format = ['E','F']
+            try:                                              
+                nrows = table.nrows                                     
+                ncols = table.ncols                                         
+                str_upcase = [i for i in string.ascii_uppercase]                    
+                i_upcase = range(len(str_upcase))                             
+                ncols_dir = dict(zip(str_upcase,i_upcase))                   
+                col_index = [ncols_dir.get(i) for i in col_format] 
+
+                for i in range(nrows):
+                    Q = table.cell(i,col_index[0]).value
+                    A = table.cell(i,col_index[1]).value
+                    print("Q: " + Q + "\nA: " + A)					
+					# Your processing function here
+                    add_qa(Q, A, delimiter="|")
+					
+            except Exception as e:
+                print('Error: %s' %e)
+                return None
+        else:
+            print('Error! Data of %s is empty!' %sheet_name)
+            return None
+
+def add_qa(Q, A, delimiter = None):
+    qlist = Q.split(delimiter)
+    alist = A.split(delimiter)
+    for q in qlist:
+        words = synonym_cut(q, 'w')	
+        tags = synonym_cut(q, 't')	
+        generate_qa(NodeClass="QA", Q=q, A=alist, words=words, tags=tags, username="Human")
 	
+@time_me(format="ms")	
+def test_add_qa():
+    handle_data_excel("./data/train.xls")		
 
 def test_add_to_synonym():
     assert len(sys.argv) >= 2
@@ -96,6 +141,7 @@ def test_generate_dict():
 
 if __name__ == "__main__":
     # TODO: Add pattern
+	# test_add_qa()
     # test_add_to_synonym()
     # test_generate_synonym()
     test_generate_dict()

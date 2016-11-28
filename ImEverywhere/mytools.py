@@ -8,6 +8,7 @@ import sys
 import os
 import time
 import functools
+import random
 import string
 import xlrd
 import xlwt
@@ -34,7 +35,11 @@ def get_current_time(format="%Y-%m-%d-%H-%M-%S"):
     """
     assert isinstance(format, str), "The format must be a string."
     return time.strftime(format, time.localtime())
-	
+
+def random_item(mylist):
+    assert mylist is not None, "The list can not be None."
+    item = mylist[random.randint(0, len(mylist)-1)]
+    return item	
 	
 def file_replace(origin_filepath, new_filepath):
     with open(origin_filepath, 'w') as origin:
@@ -65,43 +70,9 @@ def get_data_excel(filepath):
         print('Error：%s' %e)
         return None
     return data
-
-def handle_data_excel(filepath):
-    """Processing data of excel"""
-    data = get_data_excel(filepath)
-    data_sheets = data.sheet_names()
-    for sheet_name in data_sheets:
-        table = data.sheet_by_name(sheet_name)
-        # Select specified table
-        # table = data.sheet_by_index(0)
-        if data: 
-            # Select specified column
-            col_format = ['E','F']
-            try:                                              
-                nrows = table.nrows                                     
-                ncols = table.ncols                                         
-                str_upcase = [i for i in string.ascii_uppercase]                    
-                i_upcase = range(len(str_upcase))                             
-                ncols_dir = dict(zip(str_upcase,i_upcase))                   
-                col_index = [ncols_dir.get(i) for i in col_format] 
-
-                for i in range(nrows):
-                    Q = table.cell(i,col_index[0]).value
-                    A = table.cell(i,col_index[1]).value
-                    print("Q: " + Q + "\nA: " + A)		
-					# Your processing function here
-					# myfunc(Q, A)
-					
-            except Exception as e:
-                print('Error: %s' %e)
-                return None
-        else:
-            print('Error! Data of %s is empty!' %sheet_name)
-            return None
 	
 @time_me(format="ms")	
 def test():
-    change_known_hosts("gqy")
     print(get_current_time())
 	
 

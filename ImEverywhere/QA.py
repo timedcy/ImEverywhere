@@ -8,12 +8,12 @@ The 'py2neo' is a python package of neo4j, the most useful graph database.
 """
 import sys
 import os
-import pynlpir
+# import pynlpir
 from py2neo import Graph, Node, Relationship
 graph = Graph("http://localhost:7474/db/data/", password="gqy")
-import API
+import api
 from semantic import semantic_similarity, synonym_cut, generate_tree
-from mytools import time_me, get_current_time
+from mytools import time_me, get_current_time, random_item
 
 # TODO	
 def add_to_memory(Q="Q", words=None, tags=None, content=None, username="Human"):
@@ -111,6 +111,8 @@ def extract_synonym(question, subgraph, pattern = "wf"):
     pattern可选'w'-分词, 't'-关键词, 'wf'-分词标签, 'tf-关键词标签'
     """
     similarity = []
+    answer = "您好！请问有什么可以帮您的吗？"
+    do_not_know = ["正在学习中", "小民正在学习哦", "不好意思请问您可以再说一次吗", "额，这个问题嘛。。。", "我得好好想一想呢", "请问您说什么", "。。。", "您问的问题好有深度呀"]
     sv1 = synonym_cut(question, pattern)
     for node in subgraph:
         sv2 = synonym_cut(node["Q"], pattern)
@@ -119,13 +121,15 @@ def extract_synonym(question, subgraph, pattern = "wf"):
     max_similarity = max(similarity)
     print("Similarity Score: " + str(max_similarity))
     index = similarity.index(max_similarity)
-    print("Q: " + subgraph[index]["Q"])
-    print("A: " + subgraph[index]["A"])
-    if max_similarity > 0.8:
-        answer = subgraph[index]["A"]
+    Q = subgraph[index]["Q"]
+    A = subgraph[index]["A"]	
+    print("Q: " + Q)
+    if max_similarity > 0.2:
+        if isinstance(A, list):
+            answer = random_item(A)
     else:
-	    # 添加随机回答
-        answer = "正在学习中"
+	    # 随机回答
+        answer = random_item(do_not_know)
     return answer
 
 # TODO
