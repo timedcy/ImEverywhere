@@ -6,13 +6,14 @@ import numpy
 import json
 import jieba
 jieba.set_dictionary("data/jieba/synonymdict.txt")
-jieba.load_userdict("data/jieba/userdict.txt")
+#jieba.load_userdict("data/jieba/userdict.txt")
 import jieba.posseg
 import jieba.analyse
-from urllib import request
-from mytools import time_me, get_current_time, random_item
 from py2neo import Graph, Node, Relationship
 graph = Graph("http://localhost:7474/db/data/", password = "gqy")
+from urllib import request
+from mytools import time_me, get_current_time, random_item
+
 
 def semantic_tree(question):
     """
@@ -142,9 +143,8 @@ def sum_cosine(matrix, threshold):
         max = matrix.max()
     m = (row - count) if row > col else (col - count)
     return dict(total=total, m=m, total_dif=max)
-
+	
 #@time_me()	
-# TODO: Add word2vec
 def semantic_jaccard(sv1, sv2):
     """
     语义Jaccard, 返回向量语义相似度打分
@@ -225,7 +225,7 @@ def synonym_sentence(words):
             sv.append(synonym_random)   
     return sv	
 
-if __name__ == "__main__":	
+if __name__ == '__main__':	
     print("语义相似度测试......") 
     filename = "log/SemanticSimilarity_" + get_current_time() + ".md"
     f = open(filename, "w")

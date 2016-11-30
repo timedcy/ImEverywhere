@@ -21,12 +21,61 @@ with codecs.open("../config.json","rb","UTF-8") as f:
 # Set up a link to the local graph database.
 graph = Graph("http://localhost:7474/db/data", password=config["password"])
 
-# edit		
-# graph = Graph("http://localhost:7474/db/data", password="gqy")
-# node=graph.find_one("SynonymTag", "name", "Ca03A03#")
-# node["words"].remove("有效期")
-# node["words"].remove("能用多久")
-# graph.push(node)	
+def manage_node(label = None, name = None, key = None, value = None, pattern = 'e'):
+    """
+    Manage node with specified pattern. The 'e' means 'edit', 'd' means 'delete'.
+    """	
+    assert isinstance(label, str), "The label of node must be a string."
+    assert isinstance(name, str), "The label value of node must be a string."
+    node = graph.find_one(label, "name", name)
+    if not node:
+        if pattern.startswith('d'):
+            return True
+        else:
+            node = Node(label, name=name)
+            graph.create(node)
+    if pattern == 'd':
+        if not key:
+            graph.delete(node)
+            return True
+        elif not value:
+            if isinstance(key, list):
+                for item in key:
+                    del node[item]
+            else:
+                del node[key]
+            graph.push(node)
+            return True
+        assert isinstance(key, str), "The 'key' must be str when delete 'value' with 'key'."
+        if isinstance(value, list):
+            for item in value:
+                if item in node[key]:
+                    node[key].remove(item)
+        else:
+            node[key].remove(value)
+    elif pattern == 'e':
+        assert isinstance(key, str), "The 'key' must be str."
+        node[key] = value
+    elif pattern == 'a':
+        assert isinstance(key, str), "The 'key' must be str."
+        if not node[key]:
+            node[key] = value
+        else:
+            if isinstance(node[key], list):
+                if isinstance(value, list):
+                    node[key].extend(value)
+                else:
+                    node[key].append(value)
+            else:
+                if isinstance(value, list):
+                    node[key] = value.append(node[key])
+                else:
+                    new = []
+                    if node[key] != value:
+                        new.append(node[key])
+                        new.append(value)
+                        node[key] = new        
+    graph.push(node)	
 
 	
 @time_me()
@@ -138,10 +187,13 @@ def test_generate_dict():
                 for word in content[1:]:
                     new.write(word + " 2000 " + content[0] + "\n")
     				
-
+def test_manage_node():
+    manage_node(label="Test", name="test_1", key="nice", value=["wo","ta"], pattern='e')
+	
 if __name__ == "__main__":
     # TODO: Add pattern
 	# test_add_qa()
     # test_add_to_synonym()
     # test_generate_synonym()
-    test_generate_dict()
+    # test_generate_dict()
+    test_manage_node()

@@ -34,7 +34,15 @@ def get_current_time(format="%Y-%m-%d-%H-%M-%S"):
     Get current time with specific format string.
     """
     assert isinstance(format, str), "The format must be a string."
-    return time.strftime(format, time.localtime())
+	# Python3
+	# On Windows, time.strftime() and Unicode characters will raise UnicodeEncodeError.
+    # http://bugs.python.org/issue8304
+	# return time.strftime(format.encode('unicode-escape').decode(), time.localtime()).encode().decode('unicode-escape')
+    try:
+        return time.strftime(format, time.localtime())
+    except UnicodeEncodeError:
+        r = time.strftime(format.encode('unicode-escape').decode(), time.localtime())
+        return r.encode().decode('unicode-escape')
 
 def random_item(mylist):
     assert mylist is not None, "The list can not be None."
@@ -46,14 +54,7 @@ def file_replace(origin_filepath, new_filepath):
         with open(new_filepath, 'r') as new:
             for line in new.readlines():
                 origin.write(line)
-
 				
-def change_known_hosts(database_name):
-    assert isinstance(database_name, str), "The database name must be a string."
-    origin_known_hosts = "C:/Users/10449/.neo4j/known_hosts"
-    new_known_hosts = "C:/Users/10449/.neo4j/known_hosts_" + database_name
-    file_replace(origin_known_hosts, new_known_hosts)
-	
 def get_data_excel(filepath):
     """Get excel source"""
     is_valid = False   
@@ -70,7 +71,13 @@ def get_data_excel(filepath):
         print('Error：%s' %e)
         return None
     return data
-	
+				
+def change_known_hosts(database_name):
+    assert isinstance(database_name, str), "The database name must be a string."
+    origin_known_hosts = "C:/Users/10449/.neo4j/known_hosts"
+    new_known_hosts = "C:/Users/10449/.neo4j/known_hosts_" + database_name
+    file_replace(origin_known_hosts, new_known_hosts)
+		
 @time_me(format="ms")	
 def test():
     print(get_current_time())

@@ -1,13 +1,11 @@
 # -*- coding: UTF-8 -*-
-
+"""
+Batch delete subgraph in Neo4j.
+"""
 import sys
 from os import getenv
 from py2neo import Graph
 
-# MATCH(n:nodetype) DETACH DELETE n
-# MATCH (n)-[r:relationship]-() DETACH DELETE r
-# MATCH(n:nodetype) DETACH RETURN n
-# MATCH (n)-[r:relationship]-() RETURN r
 
 def delete(name=None, pattern="-n"):     
     """
@@ -20,11 +18,11 @@ def delete(name=None, pattern="-n"):
     elif pattern == "-n":
         graph.run("MATCH(n:" + name + ") DETACH DELETE n")
     elif pattern == "-r":
-        graph.run("MATCH (n)-[r:" + name + "]-() DETACH DELETE r")
+        graph.run("MATCH (n)-[r:" + name + "]-(m) DETACH DELETE r")
     elif pattern == "-nr":
-        graph.run("MATCH (n)-[r:" + name + "]-(m) DETACH DELETE r DELETE n")
+        graph.run("MATCH (n)<-[r:" + name + "]-(m) DETACH DELETE r DELETE n")
     elif pattern == "-rm":
-        graph.run("MATCH (n)-[r:" + name + "]-(m) DETACH DELETE r DELETE m")
+        graph.run("MATCH (n)-[r:" + name + "]->(m) DETACH DELETE r DELETE m")
     elif pattern == "-nrm":
         graph.run("MATCH (n)-[r:" + name + "]-(m) DETACH DELETE r DELETE n DELETE m")
 

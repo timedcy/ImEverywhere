@@ -385,13 +385,13 @@ class Recognizer(AudioSource):
 
         The Baidu Speech Recognition API key is specified by ``key``. If not specified, it uses a generic key that works out of the box. This should generally be used for personal or testing purposes only, as it **may be revoked by Baidu at any time**.
 
-        百度语音识别接口支持 POST 方式
-        目前 API 仅支持整段语音识别的模式，即需要上传整段语音进行识别
-        语音数据上传方式有两种：隐示发送和显示发送
-        原始语音的录音格式目前只支持评测 8k/16k 采样率 16bit 位深的单声道语音
-        压缩格式支持：pcm（不压缩）、wav、opus、speex、amr、x-flac
-        系统支持语言种类：中文（zh）、粤语（ct）、英文（en）
-        正式地址：http://vop.baidu.com/server_api
+        Baidu speech recognition interface supports POST mode. 
+        1.The API only supports speech recognition of entire segment of voice, you need to upload the entire segment of speech recognition.
+        2.There are two ways of voice data uploading: implicit and display. 
+        3.The original voice recording format only supports the evaluation of 8k/16k sampling rate, 16bit bit deep and single channel voice currently.
+        4.Compressed format support: PCM (no compression), WAV, opus, Speex, AMR, x-flac
+        5.System support languages: Chinese (zh), Cantonese (ct), English (en)
+        6.Address: http://vop.baidu.com/server_api
 
         Returns the most likely transcription if ``show_all`` is false (the default). Otherwise, returns the raw API response as a JSON dictionary.
 

@@ -113,6 +113,13 @@ def extract_synonym(question, subgraph, pattern = "wf"):
     similarity = []
     answer = "您好！请问有什么可以帮您的吗？"
     do_not_know = ["正在学习中", "小民正在学习哦", "不好意思请问您可以再说一次吗", "额，这个问题嘛。。。", "我得好好想一想呢", "请问您说什么", "。。。", "您问的问题好有深度呀"]
+    command = {"time":["几点了", "现在几点了", "现在时间", "现在时间是多少"], "cmd":["打电话", "打电话给"]}
+    if question in command["time"]:
+        answer = get_current_time("现在是%Y年%m月%d日%H点%M分%S秒")
+        return answer
+    elif question in command["cmd"]:
+        answer = "正在连接中，请稍候"
+        return answer
     sv1 = synonym_cut(question, pattern)
     for node in subgraph:
         sv2 = synonym_cut(node["Q"], pattern)
